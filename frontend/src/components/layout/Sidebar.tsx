@@ -1,0 +1,223 @@
+import React from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
+import { useAppDispatch, useAppSelector } from '@/app/hooks';
+import { setSidebarOpen, toggleSidebarCollapse, toggleTheme } from '@/features/ui/uiSlice';
+import {
+    Home,
+    BookOpen,
+    Code,
+    Map,
+    Trophy,
+    Settings,
+    Users,
+    BarChart3,
+    FileCode,
+    Sparkles,
+    X,
+    ChevronLeft,
+    Shield,
+    Sun,
+    Moon,
+    ClipboardList,
+    TrendingUp,
+    ScanSearch,
+    Activity,
+} from 'lucide-react';
+
+interface NavItem {
+    name: string;
+    href: string;
+    icon: React.ElementType;
+    badge?: string | number;
+    /**
+     * When true, the NavLink uses exact path matching (React Router's `end` prop).
+     * Set this on items whose href is a prefix of other items in the same list,
+     * otherwise that parent item gets falsely highlighted on every child route.
+     */
+    end?: boolean;
+}
+
+const learnerNavItems: NavItem[] = [
+    { name: 'Dashboard', href: '/dashboard', icon: Home },
+    { name: 'Assessment', href: '/assessment', icon: BookOpen },
+    { name: 'Learning Path', href: '/learning-path', icon: Map },
+    { name: 'Submissions', href: '/submissions', icon: Code },
+    { name: 'Tasks', href: '/tasks', icon: ClipboardList },
+    // S9-T11: Project Audit module — visible only to authenticated learners
+    // (this whole list is in the auth-protected layout).
+    { name: 'Audit', href: '/audits/me', icon: ScanSearch },
+    { name: 'Analytics', href: '/analytics', icon: TrendingUp },
+    { name: 'Achievements', href: '/achievements', icon: Trophy },
+];
+
+const adminNavItems: NavItem[] = [
+    // `end: true` on Overview because /admin is a prefix of every other admin
+    // route — without it, Users/Tasks/Questions/Analytics all light up the
+    // Overview row too.
+    { name: 'Overview', href: '/admin', icon: BarChart3, end: true },
+    { name: 'Users', href: '/admin/users', icon: Users },
+    { name: 'Tasks', href: '/admin/tasks', icon: FileCode },
+    { name: 'Questions', href: '/admin/questions', icon: BookOpen },
+    { name: 'Calibration', href: '/admin/calibration', icon: Activity },
+    { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
+];
+
+export const Sidebar: React.FC = () => {
+    const dispatch = useAppDispatch();
+    const location = useLocation();
+    const { sidebarOpen, sidebarCollapsed, theme } = useAppSelector((state) => state.ui);
+    const { user } = useAppSelector((state) => state.auth);
+
+    const isAdmin = user?.role === 'Admin';
+    const navItems = isAdmin && location.pathname.startsWith('/admin') ? adminNavItems : learnerNavItems;
+    // Logo lives inside an authenticated layout, so home is the user's natural surface,
+    // not the public landing page.
+    const homeDest = isAdmin && location.pathname.startsWith('/admin')
+        ? '/admin'
+        : user?.hasCompletedAssessment === false ? '/assessment' : '/dashboard';
+
+    const closeSidebar = () => dispatch(setSidebarOpen(false));
+
+    return (
+        <>
+            {/* Mobile overlay */}
+            {sidebarOpen && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+                    onClick={closeSidebar}
+                />
+            )}
+
+            {/* Sidebar */}
+            <aside
+                className={`
+          fixed top-0 left-0 z-50 h-full 
+          glass dark:glass-dark
+          transition-all duration-300 ease-in-out
+          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+          lg:translate-x-0
+          ${sidebarCollapsed ? 'lg:w-20' : 'lg:w-64'}
+          w-64
+        `}
+            >
+                <div className="flex flex-col h-full">
+                    {/* Logo */}
+                    <div className="flex items-center justify-between h-16 px-4 border-b border-white/30 dark:border-white/5">
+                        <NavLink to={homeDest} className="flex items-center gap-2" onClick={closeSidebar}>
+                            <div className="w-8 h-8 rounded-xl brand-gradient-bg flex items-center justify-center shadow-[0_4px_12px_-4px_rgba(139,92,246,.5)]">
+                                <Sparkles className="w-4 h-4 text-white" />
+                            </div>
+                            {!sidebarCollapsed && (
+                                <span className="font-bold text-lg text-neutral-900 dark:text-white">CodeMentor</span>
+                            )}
+                        </NavLink>
+
+                        <button
+                            onClick={closeSidebar}
+                            className="p-2 rounded-lg text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-white/5 lg:hidden transition-colors"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+
+                        <button
+                            onClick={() => dispatch(toggleSidebarCollapse())}
+                            className="hidden lg:flex p-2 rounded-lg text-neutral-400 hover:bg-neutral-100 dark:hover:bg-white/5 transition-colors"
+                        >
+                            <ChevronLeft className={`w-4 h-4 transition-transform ${sidebarCollapsed ? 'rotate-180' : ''}`} />
+                        </button>
+                    </div>
+
+                    {/* Navigation */}
+                    <nav className="flex-1 overflow-y-auto p-4">
+                        <ul className="space-y-1">
+                            {navItems.map((item) => (
+                                <li key={item.name}>
+                                    <NavLink
+                                        to={item.href}
+                                        end={item.end}
+                                        onClick={closeSidebar}
+                                        className={({ isActive }) => `
+                      flex items-center gap-3 px-3 py-2.5 rounded-xl
+                      transition-colors duration-200
+                      ${isActive
+                                                ? 'bg-primary-500/10 dark:bg-primary-500/20 text-primary-700 dark:text-primary-200 font-medium'
+                                                : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-white/5 hover:text-neutral-900 dark:hover:text-white'
+                                            }
+                    `}
+                                    >
+                                        {({ isActive }) => (
+                                            <>
+                                                <item.icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-primary-600 dark:text-primary-300' : ''}`} />
+                                                {!sidebarCollapsed && (
+                                                    <>
+                                                        <span className="flex-1">{item.name}</span>
+                                                        {item.badge && (
+                                                            <span className="px-2 py-0.5 text-xs font-medium bg-primary-100 text-primary-700 rounded-full">
+                                                                {item.badge}
+                                                            </span>
+                                                        )}
+                                                        {isActive && !item.badge && (
+                                                            <span className="w-1.5 h-1.5 rounded-full bg-primary-500 shadow-[0_0_6px_rgba(139,92,246,.7)]" />
+                                                        )}
+                                                    </>
+                                                )}
+                                            </>
+                                        )}
+                                    </NavLink>
+                                </li>
+                            ))}
+                        </ul>
+
+                        {/* Admin Section Toggle */}
+                        {isAdmin && !location.pathname.startsWith('/admin') && (
+                            <div className="mt-6 pt-6 border-t border-neutral-100 dark:border-white/5">
+                                <NavLink
+                                    to="/admin"
+                                    onClick={closeSidebar}
+                                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-white/5 hover:text-neutral-900 dark:hover:text-white transition-colors"
+                                >
+                                    <Shield className="w-5 h-5" />
+                                    {!sidebarCollapsed && <span>Admin Panel</span>}
+                                </NavLink>
+                            </div>
+                        )}
+
+                        {isAdmin && location.pathname.startsWith('/admin') && (
+                            <div className="mt-6 pt-6 border-t border-neutral-100 dark:border-white/5">
+                                <NavLink
+                                    to="/dashboard"
+                                    onClick={closeSidebar}
+                                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-white/5 hover:text-neutral-900 dark:hover:text-white transition-colors"
+                                >
+                                    <Home className="w-5 h-5" />
+                                    {!sidebarCollapsed && <span>Back to App</span>}
+                                </NavLink>
+                            </div>
+                        )}
+                    </nav>
+
+                    {/* Footer */}
+                    <div className="p-4 border-t border-white/30 dark:border-white/5 space-y-1">
+                        <button
+                            onClick={() => dispatch(toggleTheme())}
+                            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-white/5 hover:text-neutral-900 dark:hover:text-white transition-colors"
+                            aria-label="Toggle theme"
+                        >
+                            {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                            {!sidebarCollapsed && <span>{theme === 'dark' ? 'Light mode' : 'Dark mode'}</span>}
+                        </button>
+
+                        <NavLink
+                            to="/settings"
+                            onClick={closeSidebar}
+                            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-white/5 hover:text-neutral-900 dark:hover:text-white transition-colors"
+                        >
+                            <Settings className="w-5 h-5" />
+                            {!sidebarCollapsed && <span>Settings</span>}
+                        </NavLink>
+                    </div>
+                </div>
+            </aside>
+        </>
+    );
+};
