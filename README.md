@@ -327,10 +327,10 @@ push to `main` against ephemeral SQL Server + Redis containers.
 
 | Name | Role |
 |---|---|
-| **Omar Anwar Helmy Ahmed** | ⭐ Team Lead · Backend & Database |
+| **Omar Anwar Helmy Ahmed** | Backend & Database |
 | Mohammed Ahmed Hasabo Ahmed | Backend & Database |
 | Mahmoud Ahmed Mostafa Abdelmoaty | Frontend |
-| Ahmed Khaled Yassin Ahmed | Frontend |
+| Ahmed Khaled Yaseen Ahmed | Frontend |
 | Mahmoud Mohamed Mahmoud Abdelhamid | AI & Analysis |
 | Ziad Ahmed Mohamed Salem | AI & Analysis |
 | Eslam Emad Ebrahim Madani | DevOps |
